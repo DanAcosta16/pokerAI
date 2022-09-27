@@ -3,3 +3,7 @@ Lib/
 Scripts/
 pyvenv.cfg
 venv - Shortcut.lnk
+test.*
+/test
+app-env/
+cheat.json
