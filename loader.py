@@ -2,7 +2,7 @@ import json
 from sys import argv
 
 def read(fn):
-	data = None
+	data = json.loads("{}")
 	try:
 		with open(fn) as file: data = json.loads(file.read())
 	except Exception as e: print(e)
