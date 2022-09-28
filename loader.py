@@ -14,21 +14,37 @@ def write(data, fn):
 		return True
 	except Exception as e: print(e)
 	return False
+# def matchVal(val):
+# 	match val:
+# 		case 1: return "A"
+# 		case 2: return "2"
+# 		case 3: return "3"
+# 		case 4: return "4"
+# 		case 5: return "5"
+# 		case 6: return "6"
+# 		case 7: return "7"
+# 		case 8: return "8"
+# 		case 9: return "9"
+# 		case 10: return "10"
+# 		case 11: return "J"
+# 		case 12: return "Q"
+# 		case 13: return "K"
+
 def matchVal(val):
-	match val:
-		case 1: return "A"
-		case 2: return "2"
-		case 3: return "3"
-		case 4: return "4"
-		case 5: return "5"
-		case 6: return "6"
-		case 7: return "7"
-		case 8: return "8"
-		case 9: return "9"
-		case 10: return "10"
-		case 11: return "J"
-		case 12: return "Q"
-		case 13: return "K"
+	if val == 1: return "A"
+	elif val == 2: return "2"
+	elif val == 3: return "3"
+	elif val == 4: return "4"
+	elif val == 5: return "5"
+	elif val == 6: return "6"
+	elif val == 7: return "7"
+	elif val == 8: return "8"
+	elif val == 9: return "9"
+	elif val == 10: return "10"
+	elif val == 11: return "J"
+	elif val == 12: return "Q"
+	elif val == 13: return "K"
+
 def formatStraights(l):
 	straights = list()
 	for s in l: straights.append(f"{s[0]},{s[1]},{s[2]}")

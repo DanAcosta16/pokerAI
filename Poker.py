@@ -1,6 +1,6 @@
 import pydealer, random, os, sys
 from json import loads, dumps
-
+#Game class that includes all the methods and attributes needed to run the game
 class Game:
 	def __winningsCheck(self):
 		weight = random.randint(0, 100)
@@ -38,24 +38,38 @@ class Game:
 			self.computer.dealCards()
 		return
 
+#Entity class that acts as a player or computer, a class that contains a hand
 class Entity:
+	#contructor that passes in the game deck, and a name for the entity (i.e player or computer)
+	# also sets the inital bank balance and creates a stack to hold cards as a hand
 	def __init__(self, deck, name):
 		self.deck = deck
 		self.bank_balance = 200
 		self.hand = pydealer.Stack()
 		self.name = name
+
 	def swapHand(self, hand): self.hand = hand
+
+	#takes money out of bank balance
 	def bet(self, amount): self.bank_balance = self.bank_balance - amount
+
+	#deals 3 cards to the hand
 	def dealCards(self): self.hand += self.deck.deal(3)
+
+	#prompts the user if they would like to bet with input validation
 	def betPrompt(self):
 		amount = input("Bank Balance: $" + str(self.bank_balance) + " How much would you like to bet?: ")
 		value = int(amount)
 		while value > self.bank_balance or value < 5: amount = input("Invalid amount. Please enter a number less than your balance and more than 5. Bank Balance: $" + str(self.bank_balance) + ". ")
 		value = int(amount)
 		return value
+
+	#takes money out of player bank and/or increases game pot
 	def bet(self, amount):
 		if self.name == "Player": self.bank_balance -= amount
 		game.increasePot(amount)
+
+	#a function that determines if the computer calls the bet or raises randomly and returns amount bet
 	def callOrRaise(self, amount):
 		call = 0
 		random_number = random.randint(1, 10)
@@ -71,6 +85,7 @@ class Entity:
 		print("Computer raises $" + str(bet_raise) + ". Pot: $" + str(game.pot))
 		return bet_raise
 
+	#a function that determines if the computer checks or bet randomly and returns 0 if check or amount bet if bet
 	def checkOrBet(self, amount):
 		check = 0
 		random_number = random.randint(1, 10)
@@ -82,8 +97,10 @@ class Entity:
 				print("Computer bets $" + str(bet) + ". Pot: $" + str(game.pot))
 				return bet
 		else:
-		    print("Computer checks.")
-		    return check
+			print("Computer checks.")
+			return check
+
+	#function that determines what choices the computer has based on what decisions the user made
 	def computerChoice(self, amount):
 		if amount > 0:
 			choice = self.callOrRaise(amount)
@@ -91,6 +108,8 @@ class Entity:
 		else:
 			choice = self.checkOrBet(amount)
 			return choice
+
+	#function taht prompts the user if they would like to call or fold and returns value
 	def callOrFold(self, amount):
 		call = 0
 		fold = 1
@@ -106,15 +125,22 @@ class Entity:
 			print("Player folded. Computer wins!")
 			return fold
 
+	#prints first 2 cards to the terminal
 	def flop(self):
 		self.showCard(0)
 		self.showCard(1)
+	
+	#prints last card to the terminal
 	def river(self): self.showCard(2)
+
+	#function that takes in suit string and converts in to unicode character and returns
 	def showSuit(self, suit):
 		if suit == "Hearts": return "\u2665"
 		elif suit == "Diamonds": return "\u2666"
 		elif suit == "Spades": return "\u2660"
 		elif suit == "Clubs": return "\u2663"
+
+	#prints the card to the terminal
 	def showCard(self, index): print(self.hand[index].value + " " + self.showSuit(self.hand[index].suit))
 
 # general purpose file reader -- defaults to text if no filetype passed
@@ -131,17 +157,16 @@ def readFile(fn, filetype = None):
 
 
 
+#intialize game object and shuffle
 game = Game()
 game.shuffle()
+
 if(not os.path.isfile("cheat.json")):
 	if sys.platform in {"win32", "cygwin", "msys"}: os.system("python loader.py")
 	else: os.system("python3 loader.py")
 
-# amount = input("Bank Balance: " + str(game.player.bank_balance) + " How much would you like to bet?: ")
-# value = int(amount)
-# while value > game.player.bank_balance or value < 100:
-#     amount = input("Invalid amount. Please enter a number less than your balance and more than 100. Bank Balance: " + str(game.player.bank_balance) + " ")
-#     value = int(amount)
+
+#Prompts user to bet and determines if cheating will occur or not
 amount = game.player.betPrompt()
 game.player.bet(amount)
 print("Player bet placed.")
@@ -154,21 +179,28 @@ game.player.dealCards()
 game.computer.dealCards()
 """
 
+#prints hands to the screen
 print("****THE FLOP****\n" + "Your hand: ")
 game.player.flop()
 print("Computer's hand: ")
 game.computer.flop()
+
+#Betting after first two cards are shown
 while True:
 	ans = input("Would you like to bet or check? Type B for bet or C for check: ")
 	if ans.lower() not in ('b', 'c'): print("Invalid input. Please enter B for bet or C for check: ")
 	else: break
+
 if ans.lower() == 'b':
 	amount = game.player.betPrompt()
 	game.player.bet(amount)
 	print("Player bet placed.")
 	computer_status = game.computer.computerChoice(amount)
+
+	#if computer bet
 	if computer_status > 0:
 		result = game.player.callOrFold(computer_status)
+		#
 		if result == 0:
 			print("****THE RIVER****\n" + "Your hand: ")
 			game.player.flop()
