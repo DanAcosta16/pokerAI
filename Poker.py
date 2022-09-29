@@ -1,12 +1,31 @@
 import pydealer, random, os, sys
 from json import loads, dumps
+
 #Game class that includes all the methods and attributes needed to run the game
 class Game:
 	def __winningsCheck(self):
 		weight = random.randint(0, 100)
 		if(self.__winnings <= 0 and weight < 66 or self.__winnings < self.player.bank_balance and weight < 33): return True
 		return False
-	def __newDeck(self): self.deck = pydealer.Deck()
+	def __newDeck(self):
+		self.deck = pydealer.Deck()
+		self.deck.shuffle()
+	def __hasWinner(self, hands):
+		count = 0
+		found = False
+		while(count < len(hands) and not found):
+			hand = hands[count]
+			strHand = list()
+			for card in hand: strHand.append(str(card))
+			formattedHand = ",".join(strHand)
+			wintypes = list(self.__cheatData["wins"].keys())
+			for wintype in wintypes:
+				if formattedHand in wintypes[count]:
+					# create winning hand class -> wintype, count (index of winner)
+					found = True
+					print(f"wintype found: {wintype}")
+			count += 1
+		return found
 	def __init__(self):
 		self.deck = pydealer.Deck()
 		self.player = Entity(self.deck, "Player")
@@ -18,7 +37,7 @@ class Game:
 		self.__cheatData = readFile("cheat.json", "json")
 	def shuffle(self): self.deck.shuffle()
 	def increasePot(self, amount): self.pot = self.pot + amount
-	def determineCheat(self):
+	def determineCheat(self): # rename to dealCards, rename __winningsCheck to determineCheat
 		weight = random.randint(0, 100)
 		self.__newDeck()
 		if((weight < 50 and self.__consecutive == 0 or self.__consecutive == 1) or (weight < 35 and self.__consecutive == 2) or (weight < 20 and self.__consecutive == 3) or (weight < 10 and self.__consecutive == 4) or (weight < 5 and self.__consecutive >= 5) or self.__winningsCheck()):
@@ -28,14 +47,20 @@ class Game:
 			print(f"cheating -- chosen win type: {winType}")
 			for item in self.__cheatData["wins"]: print(f"win type: {item}")
 			possibleHands = self.__cheatData["wins"][winType]
-			#with open("test.output", "w") as file: file.write(dumps(possibleHands, indent = 4))
-			#sys.exit()
 			self.computer.hand = self.deck.get_list(random.choice(possibleHands))
-			self.player.dealCards() # computer can still randomly lose
+			self.player.dealCards() # computer can still randomly lose but the chances are pretty low
 		else:
 			# cheat no
 			self.player.dealCards()
 			self.computer.dealCards()
+		return
+	def findWinner(self):
+		hands = [self.player.hand, self.computer.hand]
+		if(self.__hasWinner(hands)):
+			print("winner found")
+		else:
+			# high card check
+			print("no winner found")
 		return
 
 #Entity class that acts as a player or computer, a class that contains a hand
@@ -154,7 +179,11 @@ def readFile(fn, filetype = None):
 			else: data = loads(file.read())
 	except Exception as e: print(e)
 	return data
-
+# tries to check if a > b, returns False if no check available
+def gt(a, b):
+	try: return a > b
+	except Exception as e: print(f"Cannot compare {type(a)} to {type(b)}")
+	return False
 
 
 #intialize game object and shuffle
@@ -236,6 +265,8 @@ else:
 		print("Computer's hand: ")
 		game.computer.flop()
 		game.computer.river()
+
+game.findWinner()
 
 # print("Player Bank: " + str(game.player.bank_balance))
 # print("Pot: " + str(game.pot))

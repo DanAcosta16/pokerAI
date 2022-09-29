@@ -50,7 +50,7 @@ def formatStraights(l):
 	for s in l: straights.append(f"{s[0]},{s[1]},{s[2]}")
 	return straights
 
-data = read("cheat.json")
+data = json.loads("{}")
 pairs = list()
 threes = list()
 straights = list()
@@ -58,7 +58,8 @@ flushes = list()
 sflushes = list()
 for i in range(13):
 	val = matchVal(i+1)
-	pairs.append(f"{val},{val}")
+	for k in range(1, 14):
+		if(k != i+1): pairs.append(f"{val},{val},{matchVal(k)}")
 	threes.append(f"{val},{val},{val}")
 	if(i+2 < 13):
 		localStraight = [val]
@@ -67,6 +68,14 @@ for i in range(13):
 
 straights.append(["Q","K","A"])
 straights = formatStraights(straights)
+wintypes = {
+	"pair": list(),
+	"three of kind": list(),
+	"straight": list(),
+	"flush": list(),
+	"straight flush": list()
+}
+data["wins"] = wintypes
 data["wins"]["pair"] = pairs
 data["wins"]["three of kind"] = threes
 data["wins"]["straight"] = straights
@@ -92,8 +101,18 @@ for s in straights:
 		#	sflushes.append(local)
 data["wins"]["flush"] = flushes
 data["wins"]["straight flush"] = sflushes
+
+rankings = {
+	"pair": 1,
+	"flush": 2,
+	"straight": 3,
+	"three of kind": 4,
+	"straight flush": 5
+}
+data["rankings"] = rankings
+
 if(len(argv) > 1): fn = argv[1]
-else: fn = "test.json"
+else: fn = "cheat.json"
 write(data, fn)
 #write(data, "cheat.json")
 #print(str(data))
