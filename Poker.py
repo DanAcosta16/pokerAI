@@ -16,10 +16,9 @@ what still needs to be done:
 
 """
 
-
+# class that is used like a structure to hold the hand of card objects, the type of with this hand is, a string of the cards and their suits, a string of just the cards, and the high card in the hand
 class Hand:
 	def __init__(self, hand):
-		# format here
 		self.hand = hand
 		self.wintype = None
 		faces = {
@@ -59,6 +58,7 @@ class Hand:
 
 #Game class that includes all the methods and attributes needed to run the game
 class Game:
+	# counts all the cards in a hand and returns the dictionary of counts -- used for finding pairs
 	def __handCount(self, hand):
 		hand = hand.split(",")
 		counts = dict()
@@ -66,9 +66,11 @@ class Game:
 			if card in counts: counts[card] += 1
 			else: counts[card] = 1
 		return counts
+	# function to determine if the computer should cheat
 	def __winningsCheck(self):
 		...
 		return False
+	# gets the win type of a hand. checks if the hand is in cheat.json and gets the wintype from there
 	def __getWinType(self, hand):
 		count = 0
 		found = False
@@ -76,10 +78,12 @@ class Game:
 		for wintype in self.__cheatData["wins"]:
 			if hand.formatted in self.__cheatData["wins"][wintype] or hand.uformatted in self.__cheatData["wins"][wintype]: winner = wintype
 		return winner
+	# creates a new deck and shuffles it
 	def __newDeck(self):
 		self.deck = pydealer.Deck()
 		self.deck.shuffle()
 		return
+	# no arg constructor
 	def __init__(self):
 		self.deck = pydealer.Deck()
 		self.player = Entity(self.deck, "Player")
@@ -89,9 +93,11 @@ class Game:
 		self.__winCount = 0 # how many wins total
 		self.__winnings = 0 # winnings/losses total
 		self.__cheatData = readFile("cheat.json", "json")
-	def shuffle(self): self.deck.shuffle()
-	def increasePot(self, amount): self.pot = self.pot + amount
-	def determineCheat(self): # rename to dealCards, rename __winningsCheck to determineCheat
+	def shuffle(self): self.deck.shuffle() # shuffles the deck
+	def increasePot(self, amount): self.pot = self.pot + amount # increases the money in the pot
+	# function to deal the cards. this is where the cheating happens
+	def dealCards(self):
+	#def determineCheat(self): # rename to dealCards, rename __winningsCheck to determineCheat
 		weight = random.randint(0, 100)
 		self.__newDeck()
 		if((weight < 50 and self.__consecutive == 0 or self.__consecutive == 1) or (weight < 35 and self.__consecutive == 2) or (weight < 20 and self.__consecutive == 3) or (weight < 10 and self.__consecutive == 4) or (weight < 5 and self.__consecutive >= 5) or self.__winningsCheck()):
@@ -101,9 +107,8 @@ class Game:
 			possibleHands = self.__cheatData["wins"][winType]
 			myHand = random.choice(possibleHands)
 			self.computer.hand = self.deck.get_list(myHand)
-			#self.computer.hand = self.deck.get_list(["AS", "KS", "QS"])
 			self.computer.hand.sort()
-			self.player.dealCards() # computer can still randomly lose but the chances are pretty low
+			self.player.dealCards() # computer can still randomly lose but the chances are pretty low. Should help with keeping suspicion lower
 			self.player.hand.sort()
 		else:
 			# cheat no
@@ -129,14 +134,13 @@ class Game:
 				self.computer.hand = temp
 		check3 = len(self.player.hand) == 3 and len(self.computer.hand) == 3
 		return
+	# finds who is the winner of the game
 	def findWinner(self):
 		hands = [
 			Hand(self.player.hand),
 			Hand(self.computer.hand)
 		]
 		print(hands[0].hand, hands[1].hand)
-		#return 0
-		#hands[0].wintype = self.__getWinType(hands[0].formatted)
 		for hand in hands:
 			wintype = self.__getWinType(hand)
 			if(wintype == "single"): wintype = self.__getWinType(hand)
@@ -146,11 +150,13 @@ class Game:
 			hands[1].wintype
 		]
 		print(f"WIN TYPES: {wintypes[0]} ||| {wintypes[1]}")
-		if(wintypes[0] == "single"): # get counts method
+		if(wintypes[0] == "single"):
+			# check for pairs!
 			counts = self.__handCount(hands[0].uformatted)
 			for key in counts.keys():
 				if(counts[key] == 2): wintypes[0] = "pair"
 		if(wintypes[1] == "single"):
+			# check for pairs... again!
 			counts = self.__handCount(hands[1].uformatted)
 			for key in counts.keys():
 				if(counts[key] == 2): wintypes[1] = "pair"
@@ -162,10 +168,14 @@ class Game:
 		else:
 			# not a tie
 			ranks = list()
+			"""
 			if(wintypes[0] != "single"): ranks.append(self.__cheatData["rankings"][wintypes[0]])
 			else: ranks.append(0)
 			if(wintypes[1] != "single"): ranks.append(self.__cheatData["rankings"][wintypes[1]])
 			else: ranks.append(0)
+			"""
+			ranks.append(self.__cheatData["rankings"][wintypes[0]])
+			ranks.append(self.__cheatData["rankings"][wintypes[1]])
 			if(gt(ranks[0], ranks[1])): winner = -1
 			else: winner = 1
 		return winner
@@ -292,14 +302,11 @@ def gt(a, b):
 	except Exception as e: print(f"Cannot compare {type(a)} to {type(b)}")
 	return False
 
-
 #intialize game object and shuffle
 game = Game()
 game.shuffle()
 
-if(not os.path.isfile("cheat.json")):
-	if sys.platform in {"win32", "cygwin", "msys"}: os.system("python loader.py")
-	else: os.system("python3 loader.py")
+if(not os.path.isfile("cheat.json")): installJSON()
 
 
 #Prompts user to bet and determines if cheating will occur or not
@@ -308,7 +315,7 @@ game.player.bet(amount)
 print("Player bet placed.")
 game.computer.bet(amount)
 print("Computer calls. Pot: $" + str(game.pot))
-game.determineCheat()
+game.dealCards()
 
 """
 game.player.dealCards()
