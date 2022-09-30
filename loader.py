@@ -88,14 +88,14 @@ for suit in suits:
 			for j in range(k+1, 13):
 				c = matchVal(j+1)+suit
 				local = [a, b, c]
-				flushes.append(local)
+				flushes.append(",".join(local))
 for s in straights:
 	localStraight = list()
 	for card in s.split(","): localStraight.append(card)
 	for suit in suits:
 		local = list()
 		for card in localStraight: local.append(card+suit)
-		sflushes.append(local)
+		sflushes.append(",".join(local))
 		#for suit in suits:
 		#	local.append(card+suit)
 		#	sflushes.append(local)
@@ -103,6 +103,7 @@ data["wins"]["flush"] = flushes
 data["wins"]["straight flush"] = sflushes
 
 rankings = {
+	"single": 0,
 	"pair": 1,
 	"flush": 2,
 	"straight": 3,

@@ -2,6 +2,9 @@ import os, sys
 
 def isWindows(): return sys.platform in {"win32", "msys", "cygwin"}
 
+debug = False
+if "-debug" in sys.argv: debug = True
+
 venv = "app-env"
 if(not os.path.isdir(venv)):
 	# virtual environment does not exist

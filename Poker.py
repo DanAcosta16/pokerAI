@@ -5,34 +5,64 @@ class Hand:
 	def __init__(self, hand):
 		# format here
 		self.hand = hand
-		self.wintype = None #wintype
-		self.formatted = None #formatted # copy the entity.getFinalHand method here
-	def getHighCard(self):
-		if(wintype != "pair"):
-			max = self.hand[0]
-			for card in self.hand:
-				if(max < card): max = card
-		else:
-			...
-		return max
-			
+		self.wintype = None
+		faces = {
+			"Ace": "A",
+			"King": "K",
+			"Queen": "Q",
+			"Jack": "J"
+		}
+		suits = {
+			"Spades": "S",
+			"Diamonds": "D",
+			"Hearts": "H",
+			"Clubs": "C"
+		}
+		tempHand = list()
+		for card in hand: tempHand.append(str(card))
+		temp = list()
+		for card in tempHand:
+			buffer = ""
+			tok = card.split(" ")
+			if tok[0] in faces: buffer = faces[tok[0]]
+			else: buffer = tok[0]
+			buffer += suits[tok[2]]
+			temp.append(buffer)
+		self.formatted = ",".join(temp)
+		temp = list()
+		for card in tempHand:
+			tok = card.split(" ")
+			if tok[0] in faces: temp.append(faces[tok[0]])
+			else: temp.append(tok[0])
+		self.uformatted = ",".join(temp)
+		deck = pydealer.Deck()
+		self.high = deck.get("2C")[0]
+		for card in hand:
+			if(self.high < card): self.high = card
+		return
+
 #Game class that includes all the methods and attributes needed to run the game
 class Game:
+	def __handCount(self, hand):
+		hand = hand.split(",")
+		counts = dict()
+		for card in hand:
+			if card in counts: counts[card] += 1
+			else: counts[card] = 1
+		return counts
 	def __winningsCheck(self):
-		weight = random.randint(0, 100)
-		if(self.__winnings <= 0 and weight < 66 or self.__winnings < self.player.bank_balance and weight < 33): return True
+		...
 		return False
+	def __getWinType(self, hand):
+		count = 0
+		found = False
+		winner = "single"
+		for wintype in self.__cheatData["wins"]:
+			if hand.formatted in self.__cheatData["wins"][wintype] or hand.uformatted in self.__cheatData["wins"][wintype]: winner = wintype
+		return winner
 	def __newDeck(self):
 		self.deck = pydealer.Deck()
 		self.deck.shuffle()
-	def __handCheck(self, hand):
-		count = 0
-		found = False
-		wintypes = list(self.__cheatData["wins"].keys())
-		while(count < len(hand) and not found):
-			if hand in winTypes:
-				...
-			count += 1
 		return
 	def __init__(self):
 		self.deck = pydealer.Deck()
@@ -52,57 +82,80 @@ class Game:
 			# cheat yes
 			winTypes = ["pair", "three of kind", "straight", "flush", "straight flush"]
 			winType = random.choice(winTypes)
-			print(f"cheating -- chosen win type: {winType}")
-			for item in self.__cheatData["wins"]: print(f"win type: {item}")
 			possibleHands = self.__cheatData["wins"][winType]
-			self.computer.hand = self.deck.get_list(random.choice(possibleHands))
+			myHand = random.choice(possibleHands)
+			self.computer.hand = self.deck.get_list(myHand)
+			#self.computer.hand = self.deck.get_list(["AS", "KS", "QS"])
+			self.computer.hand.sort()
 			self.player.dealCards() # computer can still randomly lose but the chances are pretty low
+			self.player.hand.sort()
 		else:
 			# cheat no
 			self.player.dealCards()
 			self.computer.dealCards()
+			self.player.hand.sort()
+			self.computer.hand.sort()
+		check3 = len(self.player.hand) == 3 and len(self.computer.hand) == 3
+		if(not check3):
+			if(len(self.player.hand) > 3):
+				temp = list()
+				count = len(self.player.hand)
+				while(count > -1):
+					if(count < 3): temp.append(self.player.hand[count])
+					count -= 1
+				self.player.hand = temp
+			if(len(self.computer.hand) > 3):
+				temp = list()
+				count = len(self.computer.hand)
+				while(count > -1):
+					if(count < 3): temp.append(self.computer.hand[count])
+					count -= 1
+				self.computer.hand = temp
+		check3 = len(self.player.hand) == 3 and len(self.computer.hand) == 3
 		return
 	def findWinner(self):
 		hands = [
 			Hand(self.player.hand),
 			Hand(self.computer.hand)
 		]
-		playerRank = self.__cheatData["rankings"][hand[0].wintype]
-		computerRank = self.__cheatData["rankings"][hand[1].wintype]
-		winner = ""
-		if(gt(computerRank, playerRank)): winner = 1
-		elif(gt(playerRank, computerRank)): winner = -1
-		if(winner == ""):
-			playerHigh = hand[0].getHighCard()
-			computerHigh = hand[1].getHighCard()
-			if(gt(playerHigh, computerHigh)): winner = "player"
-			elif(gt(computerHigh, playerHigh)): winner = "computer"
-			else: winner = "tie"
+		print(hands[0].hand, hands[1].hand)
+		#return 0
+		#hands[0].wintype = self.__getWinType(hands[0].formatted)
+		for hand in hands:
+			wintype = self.__getWinType(hand)
+			if(wintype == "single"): wintype = self.__getWinType(hand)
+			hand.wintype = wintype
+		wintypes = [
+			hands[0].wintype,
+			hands[1].wintype
+		]
+		print(f"WIN TYPES: {wintypes[0]} ||| {wintypes[1]}")
+		if(wintypes[0] == "single"): # get counts method
+			counts = self.__handCount(hands[0].uformatted)
+			for key in counts.keys():
+				if(counts[key] == 2): wintypes[0] = "pair"
+		if(wintypes[1] == "single"):
+			counts = self.__handCount(hands[1].uformatted)
+			for key in counts.keys():
+				if(counts[key] == 2): wintypes[1] = "pair"
+		if(wintypes[0] == wintypes[1]):
+			# tie game -- get highest card
+			if(hands[0].high == hands[1].high): winner = 0
+			elif(gt(hands[0].high, hands[1].high)): winner = -1
+			else: winner = 1
+		else:
+			# not a tie
+			ranks = list()
+			if(wintypes[0] != "single"): ranks.append(self.__cheatData["rankings"][wintypes[0]])
+			else: ranks.append(0)
+			if(wintypes[1] != "single"): ranks.append(self.__cheatData["rankings"][wintypes[1]])
+			else: ranks.append(0)
+			if(gt(ranks[0], ranks[1])): winner = -1
+			else: winner = 1
 		return winner
 
 #Entity class that acts as a player or computer, a class that contains a hand
 class Entity:
-	def getFinalHand(self):
-		strHand = list()
-		faces = {
-			"Ace": "A",
-			"King": "K",
-			"Queen": "Q",
-			"Jack": "J"
-		}
-		suits = {
-			"Spades": "S",
-			"Diamonds": "D",
-			"Hearts": "H",
-			"Clubs": "C"
-		}
-		for card in self.hand:
-			tok = str(card).split(" ")
-			if tok[0] in faces: buffer = faces[tok[0]]
-			else: buffer = tok[0]
-			buffer += suits[tok[2]]
-		...
-		return strHand
 	#contructor that passes in the game deck, and a name for the entity (i.e player or computer)
 	# also sets the inital bank balance and creates a stack to hold cards as a hand
 	def __init__(self, deck, name):
@@ -304,7 +357,11 @@ else:
 		game.computer.flop()
 		game.computer.river()
 
-game.findWinner()
+winner = game.findWinner()
+if(winner == -1): print("player wins")
+elif(winner == 0): print("tie!")
+elif(winner == 1): print("computer wins")
+else: print(f"winner code: {winner} -- should never not be -1, 0, or 1")
 
 # print("Player Bank: " + str(game.player.bank_balance))
 # print("Pot: " + str(game.pot))
