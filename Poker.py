@@ -1,6 +1,22 @@
 import pydealer, random, os, sys
 from json import loads, dumps
 
+"""
+we need to ask dr. kim which file he wants named the certain way he wants
+
+what still needs to be done:
+	* make a loop for the game, so that way it doesn't end after one round
+	* DOCUMENTATION (this is more for me)
+	* finish the white page
+	* remove print statements for debugging, if any
+	* trim unused functions
+	* get logic for when to cheat refined
+	* have the stats tracked (how many wins, how much money won/lost, etc)
+	* improve the bank system maybe?
+
+"""
+
+
 class Hand:
 	def __init__(self, hand):
 		# format here
